@@ -1,19 +1,19 @@
 package main
 
 import (
+    "bufio"
 	"encoding/csv"
 	"fmt"
-	//"io"
 	"log"
-	//"math"
 	"os"
 	"regexp"
-	//"runtime"
 	"strconv"
 	"strings"
 	"text/template"
 
 	"github.com/gosimple/slug"
+    "golang.org/x/text/encoding/charmap"
+    "golang.org/x/text/transform"
 )
 
 type Beer struct {
@@ -67,11 +67,6 @@ type Style struct {
 	style_name   string
 	last_mod  string
 }
-
-/*func roundFloat(value float64, decimals float64) float64 {
-	factor := math.Pow(10, decimals)
-	return math.Round(value*factor)/factor
-}*/
 
 func createIndexFile(brewery Brewery, geocode Geocode, template *template.Template) {
     brewerySlug := slug.MakeLang(brewery.name, "en")
@@ -143,15 +138,6 @@ func createElementFile(brewerySlug string, beer Beer, category Category, style S
 	}
 	f.Close()
 }
-
-/*func Find(slice []string, val string) (int, bool) {
-	for i, item := range slice {
-		if item == val {
-			return i, true
-		}
-	}
-	return -1, false
-}*/
 
 func createBeerList(data [][]string) []Beer {
     var beerList []Beer
@@ -297,91 +283,84 @@ func createStyleList(data [][]string) []Style {
     return styleList
 }
 
+func DecodeLines(filename string) (string, error) {
+    file, err := os.Open(filename)
+    if err != nil {
+        return "", err
+    }
+    defer file.Close()
+
+    decodingReader := transform.NewReader(file, charmap.Windows1252.NewDecoder())
+
+    var lines string
+
+    scanner := bufio.NewScanner(decodingReader)
+    for scanner.Scan() {
+        lines += strings.ReplaceAll(scanner.Text(), "\\", "") + "\n"
+    }
+    return lines, scanner.Err()
+}
+
 func main() {
 	// Beers
-    f, err := os.Open("beers.csv")
+    f, err := DecodeLines("beers.csv")
     if err != nil {
         log.Fatal(err)
     }
-    defer f.Close()
-
-    csvReader := csv.NewReader(f)
+    csvReader := csv.NewReader(strings.NewReader(f))
     data, err := csvReader.ReadAll()
     if err != nil {
         log.Fatal(err)
     }
-
     beerList := createBeerList(data)
 
-    //fmt.Printf("%+v\n", beerList)
-
 	// Breweries
-	f, err = os.Open("breweries.csv")
+    f, err = DecodeLines("breweries.csv")
     if err != nil {
         log.Fatal(err)
     }
-    defer f.Close()
-
-    csvReader = csv.NewReader(f)
+    csvReader = csv.NewReader(strings.NewReader(f))
     data, err = csvReader.ReadAll()
     if err != nil {
         log.Fatal(err)
     }
-
     breweryList := createBreweryList(data)
 
-    //fmt.Printf("%+v\n", breweryList)
-
 	// Geocode
-	f, err = os.Open("breweries_geocode.csv")
+    f, err = DecodeLines("breweries_geocode.csv")
     if err != nil {
         log.Fatal(err)
     }
-    defer f.Close()
-
-    csvReader = csv.NewReader(f)
+    csvReader = csv.NewReader(strings.NewReader(f))
     data, err = csvReader.ReadAll()
     if err != nil {
         log.Fatal(err)
     }
-
     geocodeList := createGeocodeList(data)
 
-    //fmt.Printf("%+v\n", geocodeList)
-
 	// Categories
-	f, err = os.Open("categories.csv")
+    f, err = DecodeLines("categories.csv")
     if err != nil {
         log.Fatal(err)
     }
-    defer f.Close()
-
-    csvReader = csv.NewReader(f)
+    csvReader = csv.NewReader(strings.NewReader(f))
     data, err = csvReader.ReadAll()
     if err != nil {
         log.Fatal(err)
     }
-
     categoryList := createCategoryList(data)
 
-    //fmt.Printf("%+v\n", categoryList)
-
 	// Styles
-	f, err = os.Open("styles.csv")
+    f, err = DecodeLines("styles.csv")
     if err != nil {
         log.Fatal(err)
     }
-    defer f.Close()
-
-    csvReader = csv.NewReader(f)
+    csvReader = csv.NewReader(strings.NewReader(f))
     data, err = csvReader.ReadAll()
     if err != nil {
         log.Fatal(err)
     }
-
     styleList := createStyleList(data)
-
-    //fmt.Printf("%+v\n", styleList)
 
 	// Create templates
 	indexTmpl := `---

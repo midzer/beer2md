@@ -4,3 +4,5 @@ github.com/gosimple/unidecode v1.0.1 h1:hZzFTMMqSswvf0LBJZCZgThIZrpDHFXux9KeGmn6
 github.com/gosimple/unidecode v1.0.1/go.mod h1:CP0Cr1Y1kogOtx0bJblKzsVWrqYaqfNOnHzpgWw4Awc=
 github.com/willwangcn/fastcsv v0.0.0-20170112072756-1e8f6d806f44 h1:f8mjVPGp4+YC/VsGu1Z1J9wqwNMId4XzVoQBC5fxPcI=
 github.com/willwangcn/fastcsv v0.0.0-20170112072756-1e8f6d806f44/go.mod h1:vRevQxpzYJVsfKOSyGq7VcMalpCxF6VHJIpPw9EStUw=
+golang.org/x/text v0.3.7 h1:olpwvP2KacW1ZWvsR7uQhoyTYvKAupfQrRGBFM352Gk=
+golang.org/x/text v0.3.7/go.mod h1:u+2+/6zg+i71rQMx5EYifcz6MCKuco9NR6JIITiCfzQ=

@@ -7,4 +7,7 @@ require (
 	github.com/willwangcn/fastcsv v0.0.0-20170112072756-1e8f6d806f44
 )
 
-require github.com/gosimple/unidecode v1.0.1 // indirect
+require (
+	github.com/gosimple/unidecode v1.0.1 // indirect
+	golang.org/x/text v0.3.7 // indirect
+)

@@ -4,6 +4,7 @@ import (
     "bufio"
 	"encoding/csv"
 	"fmt"
+    "io"
 	"log"
 	"os"
 	"regexp"
@@ -283,83 +284,55 @@ func createStyleList(data [][]string) []Style {
     return styleList
 }
 
-func DecodeLines(filename string) (string, error) {
-    file, err := os.Open(filename)
+func ReadLines(filename string, decode bool) [][]string {
+    var r io.Reader
+    f, err := os.Open(filename)
     if err != nil {
-        return "", err
+        return nil
     }
-    defer file.Close()
+    defer f.Close()
 
-    decodingReader := transform.NewReader(file, charmap.Windows1252.NewDecoder())
+    if decode {
+        decodingReader := transform.NewReader(f, charmap.Windows1252.NewDecoder())
 
-    var lines string
+        var lines string
 
-    scanner := bufio.NewScanner(decodingReader)
-    for scanner.Scan() {
-        lines += strings.ReplaceAll(scanner.Text(), "\\", "") + "\n"
+        scanner := bufio.NewScanner(decodingReader)
+        for scanner.Scan() {
+            lines += scanner.Text() + "\n"
+        }
+        r = strings.NewReader(lines)
+    } else {
+        r = f
     }
-    return lines, scanner.Err()
-}
-
-func main() {
-	// Beers
-    f, err := DecodeLines("beers.csv")
-    if err != nil {
-        log.Fatal(err)
-    }
-    csvReader := csv.NewReader(strings.NewReader(f))
+    csvReader := csv.NewReader(r)
     data, err := csvReader.ReadAll()
     if err != nil {
         log.Fatal(err)
     }
+
+    return data
+}
+
+func main() {
+	// Beers
+    data := ReadLines("beers.csv", false)
     beerList := createBeerList(data)
 
 	// Breweries
-    f, err = DecodeLines("breweries.csv")
-    if err != nil {
-        log.Fatal(err)
-    }
-    csvReader = csv.NewReader(strings.NewReader(f))
-    data, err = csvReader.ReadAll()
-    if err != nil {
-        log.Fatal(err)
-    }
+    data = ReadLines("breweries.csv", true)
     breweryList := createBreweryList(data)
 
 	// Geocode
-    f, err = DecodeLines("breweries_geocode.csv")
-    if err != nil {
-        log.Fatal(err)
-    }
-    csvReader = csv.NewReader(strings.NewReader(f))
-    data, err = csvReader.ReadAll()
-    if err != nil {
-        log.Fatal(err)
-    }
+    data = ReadLines("breweries_geocode.csv", false)
     geocodeList := createGeocodeList(data)
 
 	// Categories
-    f, err = DecodeLines("categories.csv")
-    if err != nil {
-        log.Fatal(err)
-    }
-    csvReader = csv.NewReader(strings.NewReader(f))
-    data, err = csvReader.ReadAll()
-    if err != nil {
-        log.Fatal(err)
-    }
+    data = ReadLines("categories.csv", false)
     categoryList := createCategoryList(data)
 
 	// Styles
-    f, err = DecodeLines("styles.csv")
-    if err != nil {
-        log.Fatal(err)
-    }
-    csvReader = csv.NewReader(strings.NewReader(f))
-    data, err = csvReader.ReadAll()
-    if err != nil {
-        log.Fatal(err)
-    }
+    data = ReadLines("styles.csv", false)
     styleList := createStyleList(data)
 
 	// Create templates
@@ -428,7 +401,7 @@ upc: {{ with .upc }}{{ . }}{{ end }}
         }
         if foundBrewery.name != "" {
             brewerySlug := slug.MakeLang(foundBrewery.name, "en")
-            err = os.MkdirAll("breweries/"+brewerySlug, 0755)
+            os.MkdirAll("breweries/"+brewerySlug, 0755)
 		    createIndexFile(foundBrewery, foundGeocode, indexTemplate)
 		    createElementFile(brewerySlug, beer, foundCategory, foundStyle, mdTemplate)
         }
